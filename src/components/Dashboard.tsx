@@ -1,13 +1,75 @@
 import React, { useState } from 'react';
 import { Task } from '../types';
-import { useTasks } from '../hooks/useTasks';
 import Header from './Header';
 import PerformanceIndicators from './PerformanceIndicators';
 import TaskTable from './TaskTable';
 import TaskModal from './TaskModal';
 
 const Dashboard: React.FC = () => {
-  const { tasks, loading, error, createTask, updateTask, deleteTask } = useTasks();
+  const [tasks, setTasks] = useState<Task[]>([
+    {
+      id: '1',
+      title: 'Développer le module d\'authentification',
+      description: 'Implémenter le système de connexion avec validation',
+      status: 'completed',
+      priority: 'high',
+      assignee: 'Jean Dupont',
+      dueDate: '2025-01-20',
+      createdAt: '2025-01-10T10:00:00Z',
+      completedAt: '2025-01-18T14:30:00Z'
+    },
+    {
+      id: '2',
+      title: 'Concevoir l\'interface utilisateur',
+      description: 'Créer les maquettes et prototypes pour l\'application',
+      status: 'in-progress',
+      priority: 'medium',
+      assignee: 'Marie Martin',
+      dueDate: '2025-01-25',
+      createdAt: '2025-01-12T09:00:00Z'
+    },
+    {
+      id: '3',
+      title: 'Tester les fonctionnalités',
+      description: 'Effectuer les tests unitaires et d\'intégration',
+      status: 'todo',
+      priority: 'medium',
+      assignee: 'Pierre Leroy',
+      dueDate: '2025-01-30',
+      createdAt: '2025-01-15T11:00:00Z'
+    },
+    {
+      id: '4',
+      title: 'Optimiser les performances',
+      description: 'Améliorer la vitesse de chargement et l\'efficacité',
+      status: 'overdue',
+      priority: 'high',
+      assignee: 'Sophie Bernard',
+      dueDate: '2025-01-15',
+      createdAt: '2025-01-08T08:00:00Z'
+    },
+    {
+      id: '5',
+      title: 'Documenter l\'API',
+      description: 'Rédiger la documentation technique complète',
+      status: 'todo',
+      priority: 'low',
+      assignee: 'Antoine Rousseau',
+      dueDate: '2025-02-05',
+      createdAt: '2025-01-16T13:00:00Z'
+    },
+    {
+      id: '6',
+      title: 'Configurer l\'environnement de production',
+      description: 'Mettre en place les serveurs et la CI/CD',
+      status: 'in-progress',
+      priority: 'high',
+      assignee: 'Émilie Moreau',
+      dueDate: '2025-01-28',
+      createdAt: '2025-01-14T16:00:00Z'
+    }
+  ]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>();
 
@@ -23,52 +85,28 @@ const Dashboard: React.FC = () => {
 
   const handleDeleteTask = (taskId: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
-      deleteTask(taskId);
+      setTasks(tasks.filter(task => task.id !== taskId));
     }
   };
 
-  const handleSaveTask = async (taskData: Omit<Task, 'id' | 'createdAt'>) => {
-    try {
+  const handleSaveTask = (taskData: Omit<Task, 'id' | 'createdAt'>) => {
     if (editingTask) {
-        await updateTask(editingTask.id, taskData);
+      // Modifier une tâche existante
+      setTasks(tasks.map(task => 
+        task.id === editingTask.id 
+          ? { ...task, ...taskData }
+          : task
+      ));
     } else {
-        await createTask(taskData);
-    }
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error('Error saving task:', error);
+      // Créer une nouvelle tâche
+      const newTask: Task = {
+        ...taskData,
+        id: Date.now().toString(),
+        createdAt: new Date().toISOString()
+      };
+      setTasks([...tasks, newTask]);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement des tâches...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <p className="text-red-600 mb-4">Erreur: {error}</p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-blue-800 font-medium mb-2">Configuration requise</p>
-            <p className="text-blue-700 text-sm mb-3">
-              Pour utiliser cette fonctionnalité, vous devez vous connecter à Supabase.
-            </p>
-            <p className="text-blue-600 text-xs">
-              Cliquez sur le bouton "Connect to Supabase" en haut à droite de l'écran.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

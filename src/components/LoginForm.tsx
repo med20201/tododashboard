@@ -101,11 +101,25 @@ const LoginForm: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-            <p className="text-sm text-gray-600 mb-2">Nouveau utilisateur ?</p>
-            <p className="text-xs text-gray-500">
-              Créez un compte avec Supabase Auth pour commencer à utiliser la plateforme.
-            </p>
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <p className="text-sm text-gray-600 mb-4 text-center">Comptes de démonstration :</p>
+            <div className="space-y-2">
+              {demoAccounts.map((account, index) => (
+                <div
+                  key={index}
+                  className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => {
+                    setEmail(account.email);
+                    setPassword(account.password);
+                  }}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-700">{account.role}</span>
+                    <span className="text-xs text-gray-500">{account.email}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import { AuthContextType, User } from '../types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -12,69 +11,39 @@ export const useAuth = () => {
   return context;
 };
 
+// Utilisateurs de démonstration
+const DEMO_USERS = [
+  { id: '1', email: 'admin@platform.com', password: 'admin123', name: 'Administrateur' },
+  { id: '2', email: 'manager@platform.com', password: 'manager123', name: 'Gestionnaire' },
+  { id: '3', email: 'user@platform.com', password: 'user123', name: 'Utilisateur' }
+];
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.name || session.user.email || 'Utilisateur'
-        });
-      }
-      setIsLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.name || session.user.email || 'Utilisateur'
-          });
-        } else {
-          setUser(null);
-        }
-        setIsLoading(false);
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
     }
+    setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        const userData = {
-          id: data.user.id,
-          email: data.user.email || '',
-          name: data.user.user_metadata?.name || data.user.email || 'Utilisateur'
-        };
-        setUser(userData);
-        setIsLoading(false);
-        return true;
-      }
-    } catch (error) {
-      console.error('Login error:', error);
+    // Simulation d'un délai d'authentification
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const foundUser = DEMO_USERS.find(u => u.email === email && u.password === password);
+    
+    if (foundUser) {
+      const userData = { id: foundUser.id, email: foundUser.email, name: foundUser.name };
+      setUser(userData);
+      localStorage.setItem('currentUser', JSON.stringify(userData));
       setIsLoading(false);
-      return false;
+      return true;
     }
     
     setIsLoading(false);
@@ -82,8 +51,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    supabase.auth.signOut();
     setUser(null);
+    localStorage.removeItem('currentUser');
   };
 
   return (
